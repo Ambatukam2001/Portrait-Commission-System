@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h4 class="text-xl font-bold uppercase tracking-widest mb-2">${art.title}</h4>
                         <div class="flex items-center justify-between border-t border-white/20 pt-3 mt-1">
                             <span class="text-[10px] font-black uppercase tracking-widest">Size: <span class="artwork-size">${art.size}</span></span>
-                            <span class="text-sm font-black text-[#C16053] tracking-widest">₱<span class="artwork-price">${art.price}</span></span>
                         </div>
                     </div>
                 </div>
@@ -72,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
                          <h4 class="text-xl font-bold text-white uppercase tracking-widest mb-2">${art.title}</h4>
                          <div class="flex items-center justify-between border-t border-white/20 pt-3 mt-1">
                              <span class="text-[9px] font-black uppercase text-white tracking-widest">Size: <span class="artwork-size">${art.size}</span></span>
-                             <span class="text-sm font-black text-white tracking-widest">₱<span class="artwork-price">${art.price}</span></span>
                          </div>
                     </div>
                     <div class="absolute top-6 right-6 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity">
