@@ -1,279 +1,173 @@
-// Booking Form Logic
+// ============================================================
+// PENCILATION — Booking Form Logic (index.html)
+// ============================================================
+
 document.addEventListener('DOMContentLoaded', () => {
+
     const bookingForm = document.getElementById('booking-form');
-    const detailedBookingForm = document.getElementById('detailed-booking-form');
+    if (!bookingForm) return;
 
-    // 1. Landing Page Booking (Simple)
-    if(bookingForm) {
-        bookingForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(bookingForm);
-            const fileInput = bookingForm.querySelector('input[name="file"]');
-            const receiptInput = document.getElementById('gcash-receipt-file');
-            const paymentType = formData.get('payment');
-            
-            // Check for Receipt if GCash
-            if(paymentType === 'gcash' && (!receiptInput || !receiptInput.files[0])) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Proof of Payment Required',
-                    text: 'Please upload your GCash receipt screenshot to proceed.',
-                    confirmButtonColor: '#C16053'
-                });
-                return;
-            }
-
-            let referenceImg = null;
-            let receiptImg = null;
-
-            // Show Loading
-            Swal.fire({
-                title: 'Processing Request...',
-                text: 'Curating your commission details and verifying payment...',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
-
-            const getB64 = (file) => {
-                return new Promise((resolve, reject) => {
-                    if(!file) resolve(null);
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 800;
-                            const MAX_HEIGHT = 800;
-                            let width = img.width;
-                            let height = img.height;
-
-                            if (width > height && width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            } else if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
-
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-                            // Compress heavily to avoid 413/500 errors
-                            resolve(canvas.toDataURL('image/jpeg', 0.5));
-                        };
-                        img.onerror = reject;
-                        img.src = event.target.result;
-                    };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-            };
-
-            try {
-                if (fileInput && fileInput.files[0]) referenceImg = await getB64(fileInput.files[0]);
-                if (paymentType === 'gcash' && receiptInput && receiptInput.files[0]) {
-                    receiptImg = await getB64(receiptInput.files[0]);
-                }
-            } catch (err) {
-                console.error("Image processing error:", err);
-            }
-
-            const bookingData = {
-                client_name: formData.get('name'),
-                client_email: formData.get('email'),
-                client_phone: formData.get('phone'),
-                client_social: formData.get('social'),
-                medium: formData.get('medium'),
-                size: formData.get('size'),
-                address: formData.get('address'),
-                deadline: formData.get('deadline'),
-                payment_method: paymentType,
-                reference_url: referenceImg,
-                receipt_url: receiptImg
-            };
-
-            try {
-                const response = await fetch(`${CONFIG.API_URL}/bookings`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(bookingData)
-                });
-
-                if (!response.ok) throw new Error(`Server status ${response.status}: ${response.statusText}`);
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Commission Request Sent!',
-                    text: `Request successfully submitted to our cloud system. Artist will contact you at ${bookingData.client_email} soon!`,
-                    confirmButtonColor: '#C16053'
-                }).then(() => {
-                    bookingForm.reset();
-                    if(typeof toggleGCashReceipt === 'function') toggleGCashReceipt(bookingForm.querySelector('select[name="payment"]'));
-                });
-            } catch (error) {
-                console.error("Submission Error Details:", error);
-                const errorMsg = error.message.includes('413') ? 'Image is too large for the server.' : 
-                               (error.message.includes('500') ? 'Internal Server Error (Check Supabase).' : 
-                               'Could not connect to the cloud server or request timed out.');
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Submission Failed',
-                    text: `${errorMsg} Please try a smaller image or check your connection.`,
-                    footer: `<small class="opacity-50">Log: ${error.message}</small>`,
-                    confirmButtonColor: '#1A1A1A'
-                });
-            }
-        });
-    }
-
-    // 2. Conditional Payment Logic
+    // ── Payment toggle ───────────────────────────────────────
     window.toggleGCashReceipt = (el) => {
         const wrapper = document.getElementById('gcash-receipt-wrapper');
-        const input = document.getElementById('gcash-receipt-file');
-        if(!wrapper) return;
-
-        if(el.value === 'gcash') {
-            wrapper.classList.remove('hidden');
-            if(input) input.required = true;
-        } else {
-            wrapper.classList.add('hidden');
-            if(input) input.required = false;
-        }
+        const input   = document.getElementById('gcash-receipt-file');
+        if (!wrapper) return;
+        const isGcash = el.value === 'gcash';
+        wrapper.classList.toggle('hidden', !isGcash);
+        if (input) input.required = isGcash;
     };
 
+    // Initialise on page load
+    const paySelect = bookingForm.querySelector('select[name="payment"]');
+    if (paySelect) toggleGCashReceipt(paySelect);
+
+    // ── File name display ────────────────────────────────────
     window.updateFilename = (inputId, targetId) => {
-        const input = document.getElementById(inputId);
+        const input  = document.getElementById(inputId);
         const target = document.getElementById(targetId);
-        if(input && input.files[0]) {
-            target.textContent = `Attached: ${input.files[0].name.substring(0, 20)}...`;
-            target.parentElement.classList.add('bg-green-50', 'border-green-200', 'opacity-100');
+        if (input?.files[0] && target) {
+            target.textContent = `Attached: ${input.files[0].name.substring(0, 24)}...`;
+            target.parentElement.classList.add('bg-green-50', 'border-green-200');
         }
     };
 
-    // Initialize Visibility
-    const paySelect = document.querySelector('select[name="payment"]');
-    if(paySelect) toggleGCashReceipt(paySelect);
-
-    // 2. Dashboard Detailed Booking (Admin/User Features Simulator)
-    if(detailedBookingForm) {
-        detailedBookingForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const payment = e.target.payment.value;
-            const deadline = e.target.querySelector('input[type="date"]').value;
-
-            if(!deadline) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Invalid Deadline',
-                    text: 'Please select a preferred date for completion.',
-                    confirmButtonColor: '#C16053'
-                });
-                return;
-            }
-
-            Swal.fire({
-                icon: 'question',
-                title: 'Confirm Booking?',
-                text: `Method: ${payment.toUpperCase()} | Deadline: ${deadline}`,
-                showCancelButton: true,
-                confirmButtonText: 'Submit Order',
-                confirmButtonColor: '#1A1A1A',
-                cancelButtonColor: '#C16053'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Booking Confirmed!',
-                        text: 'Your order is now in the artist queue. Track it in your bookings tab.',
-                        confirmButtonColor: '#1A1A1A'
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                }
-            });
+    // ── Compress image to base64 ─────────────────────────────
+    function compressImage(file, maxW = 800, maxH = 800, quality = 0.5) {
+        return new Promise((resolve, reject) => {
+            if (!file) { resolve(null); return; }
+            const reader = new FileReader();
+            reader.onerror = reject;
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onerror = reject;
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > maxW) { height = height * maxW / width; width = maxW; }
+                    if (height > maxH) { width = width * maxH / height; height = maxH; }
+                    const canvas = document.createElement('canvas');
+                    canvas.width  = width;
+                    canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         });
     }
 
-    // 3. Booking Map Logic (Leaflet)
-    const mapDiv = document.getElementById('booking-map-picker');
-    const addressInput = document.getElementById('booking-address-input');
-    if(!mapDiv) return;
+    // ── Form submit ──────────────────────────────────────────
+    bookingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd          = new FormData(bookingForm);
+        const paymentType = fd.get('payment');
+        const receiptInput = document.getElementById('gcash-receipt-file');
 
-    // BGC Center
-    const bgc = [14.5492, 121.0450];
-    const map = L.map('booking-map-picker', {
-        zoomControl: false // Hide default top-left control
-    }).setView(bgc, 16);
-
-    // Add zoom control to bottom-right
-    L.control.zoom({
-        position: 'bottomright'
-    }).addTo(map);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
-
-    // Draggable Marker
-    let selectedLatLng = { lat: bgc[0], lng: bgc[1] };
-    const marker = L.marker(bgc, {
-        draggable: true
-    }).addTo(map);
-
-    marker.on('dragend', function(e) {
-        const position = marker.getLatLng();
-        selectedLatLng = { lat: position.lat, lng: position.lng };
-        console.log("Location Picked:", position);
-        if(addressInput) {
-            addressInput.value = `📍 Map Location: ${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}`;
+        // Validate GCash receipt
+        if (paymentType === 'gcash' && !receiptInput?.files[0]) {
+            Swal.fire({ icon: 'warning', title: 'Receipt Required', text: 'Please upload your GCash screenshot.', confirmButtonColor: '#C16053' });
+            return;
         }
-    });
 
-    // Function to search location
-    window.searchMapLocation = async () => {
-        const input = document.getElementById('map-search-input');
-        const query = input.value.trim();
-        if(!query) return;
+        Swal.fire({ title: 'Submitting...', text: 'Curating your commission details…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
-            const data = await response.json();
-            
-            if(data && data.length > 0) {
-                const { lat, lon } = data[0];
-                const newPos = [parseFloat(lat), parseFloat(lon)];
-                
-                map.setView(newPos, 16);
-                marker.setLatLng(newPos);
-                selectedLatLng = { lat: newPos[0], lng: newPos[1] };
-                
-                if(addressInput) {
-                    addressInput.value = `📍 Map Location: ${newPos[0].toFixed(4)}, ${newPos[1].toFixed(4)} (${query})`;
-                }
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Location not found',
-                    text: 'Try searching for a more specific place or landmark.',
-                    confirmButtonColor: '#1A1A1A'
-                });
+            const refFile     = bookingForm.querySelector('input[name="file"]');
+            const referenceUrl = refFile?.files[0] ? await compressImage(refFile.files[0]) : null;
+            const receiptUrl   = (paymentType === 'gcash' && receiptInput?.files[0])
+                                 ? await compressImage(receiptInput.files[0])
+                                 : null;
+
+            const payload = {
+                client_name:    fd.get('name'),
+                client_email:   fd.get('email'),
+                client_phone:   fd.get('phone'),
+                client_social:  fd.get('social'),
+                medium:         fd.get('medium'),
+                size:           fd.get('size'),
+                address:        fd.get('address'),
+                deadline:       fd.get('deadline') || null,
+                payment_method: paymentType,
+                reference_url:  referenceUrl,
+                receipt_url:    receiptUrl
+            };
+
+            const res = await fetch(`${CONFIG.API_URL}/bookings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || `Server error ${res.status}`);
             }
-        } catch (error) {
-            console.error("Search Error:", error);
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Commission Submitted!',
+                text: `We'll reach out to you at ${payload.client_email} soon.`,
+                confirmButtonColor: '#C16053'
+            });
+
+            bookingForm.reset();
+            if (paySelect) toggleGCashReceipt(paySelect);
+
+        } catch (err) {
+            console.error('Booking Error:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Submission Failed',
+                text: err.message || 'Could not connect to the server. Please try again.',
+                confirmButtonColor: '#1A1A1A'
+            });
         }
-    };
-
-    // Function to open Google Maps in new tab
-    window.openExternalGoogleMap = () => {
-        const url = `https://www.google.com/maps/search/?api=1&query=${selectedLatLng.lat},${selectedLatLng.lng}`;
-        window.open(url, '_blank');
-    };
-
-    // Handle Tab/Visibility Resize Fix
-    window.addEventListener('click', () => {
-        setTimeout(() => map.invalidateSize(), 300);
     });
+
+    // ── Leaflet Map Picker ───────────────────────────────────
+    const mapDiv      = document.getElementById('booking-map-picker');
+    const addrInput   = document.getElementById('booking-address-input');
+    if (!mapDiv) return;
+
+    const bgc = [14.5492, 121.0450];
+    const map = L.map('booking-map-picker', { zoomControl: false }).setView(bgc, 15);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+    let pickedLatLng = { lat: bgc[0], lng: bgc[1] };
+    const marker = L.marker(bgc, { draggable: true }).addTo(map);
+
+    function setAddress(lat, lng, label = '') {
+        pickedLatLng = { lat, lng };
+        if (addrInput) addrInput.value = label || `📍 ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    }
+
+    marker.on('dragend', () => {
+        const { lat, lng } = marker.getLatLng();
+        setAddress(lat, lng);
+    });
+
+    window.searchMapLocation = async () => {
+        const query = document.getElementById('map-search-input')?.value.trim();
+        if (!query) return;
+        try {
+            const res  = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            if (data.length) {
+                const lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
+                map.setView([lat, lng], 16);
+                marker.setLatLng([lat, lng]);
+                setAddress(lat, lng, `📍 ${query}`);
+            } else {
+                Swal.fire({ icon: 'error', title: 'Not Found', text: 'Try a more specific location.', confirmButtonColor: '#1A1A1A' });
+            }
+        } catch { Swal.fire({ icon: 'error', title: 'Search Error', confirmButtonColor: '#1A1A1A' }); }
+    };
+
+    window.openExternalGoogleMap = () => {
+        window.open(`https://www.google.com/maps/search/?api=1&query=${pickedLatLng.lat},${pickedLatLng.lng}`, '_blank');
+    };
+
+    // Fix map tile loading after tab visibility change
+    window.addEventListener('click', () => setTimeout(() => map.invalidateSize(), 300), { passive: true });
 });

@@ -160,17 +160,6 @@ h3,
     animation: fadeInUp 0.8s ease-out forwards;
 }
 
-/* Custom Overrides */
-.text-xl {
-    font-size: 9px !important;
-    color: #22c55e !important;
-    /* Tailwind green-500 equivalent */
-}
-
-.text-8xl {
-    color: rgb(188 94 81) !important;
-}
-
 /* --- High-Fidelity Navigation Dock Styles --- */
 .glass-dock {
     position: fixed;

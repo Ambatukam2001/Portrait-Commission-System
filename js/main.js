@@ -1,118 +1,74 @@
-// UI Logic for Landing Page
+// ============================================================
+// PENCILATION — Main UI Logic (index.html only)
+// ============================================================
+
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Smooth Scrolling for Navigation
+
+    // ── 1. Smooth Anchor Scrolling ──────────────────────────
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
-            e.preventDefault();
             const targetId = this.getAttribute('href');
             if (targetId === '#') return;
-
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                window.scrollTo({
-                    top: targetElement.offsetTop - 80, // Offset for fixed nav
-                    behavior: 'smooth'
-                });
+            const el = document.querySelector(targetId);
+            if (el) {
+                e.preventDefault();
+                window.scrollTo({ top: el.offsetTop - 80, behavior: 'smooth' });
             }
         });
     });
 
-    // 2. Sticky Navbar Effect
+    // ── 2. Sticky Navbar ────────────────────────────────────
     const mainNav = document.getElementById('main-nav');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            mainNav.classList.remove('bg-transparent', 'py-6', 'border-none');
-            mainNav.classList.add('bg-white', 'py-4', 'border-b', 'border-gray-100', 'shadow-sm');
-        } else {
-            mainNav.classList.add('bg-transparent', 'py-6', 'border-none');
-            mainNav.classList.remove('bg-white', 'py-4', 'border-b', 'border-gray-100', 'shadow-sm');
-        }
-    });
+    if (mainNav) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                mainNav.classList.remove('bg-transparent', 'py-6', 'border-none');
+                mainNav.classList.add('bg-white', 'py-4', 'border-b', 'border-gray-100', 'shadow-sm');
+            } else {
+                mainNav.classList.add('bg-transparent', 'py-6', 'border-none');
+                mainNav.classList.remove('bg-white', 'py-4', 'border-b', 'border-gray-100', 'shadow-sm');
+            }
+        });
+    }
 
-    // 3. Mobile Menu Toggle System
+    // ── 3. Mobile Menu Toggle ───────────────────────────────
     const mobileToggle = document.getElementById('mobile-toggle');
-    const mobileClose = document.getElementById('mobile-close');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+    const mobileClose  = document.getElementById('mobile-close');
+    const mobileMenu   = document.getElementById('mobile-menu');
 
-    if (mobileToggle && mobileMenu) {
-        mobileToggle.addEventListener('click', () => {
-            mobileMenu.classList.add('translate-x-0');
-            mobileMenu.classList.remove('translate-x-full');
-            document.body.style.overflow = 'hidden';
-        });
+    const openMenu  = () => { if (mobileMenu) { mobileMenu.classList.add('translate-x-0'); mobileMenu.classList.remove('translate-x-full'); document.body.style.overflow = 'hidden'; } };
+    const closeMenu = () => { if (mobileMenu) { mobileMenu.classList.remove('translate-x-0'); mobileMenu.classList.add('translate-x-full'); document.body.style.overflow = ''; } };
+
+    if (mobileToggle) mobileToggle.addEventListener('click', openMenu);
+    if (mobileClose)  mobileClose.addEventListener('click', closeMenu);
+    document.querySelectorAll('.mobile-nav-link').forEach(link => link.addEventListener('click', closeMenu));
+
+    // ── 4. Scroll Spy for Glass Dock ────────────────────────
+    const sections = document.querySelectorAll('section[id]');
+    const dockItems = document.querySelectorAll('.dock-item');
+
+    if (sections.length && dockItems.length) {
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                if (window.pageYOffset >= section.offsetTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+            dockItems.forEach(item => {
+                item.classList.toggle('active-dock-item', item.getAttribute('href') === `#${current}`);
+            });
+        }, { passive: true });
     }
 
-    if (mobileClose && mobileMenu) {
-        mobileClose.addEventListener('click', () => {
-            mobileMenu.classList.remove('translate-x-0');
-            mobileMenu.classList.add('translate-x-full');
-            document.body.style.overflow = 'auto';
-        });
-    }
-
-    // Close menu when navigation links are clicked
-    mobileLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            mobileMenu.classList.remove('translate-x-0');
-            mobileMenu.classList.add('translate-x-full');
-            document.body.style.overflow = 'auto';
-        });
-    });
-
-    // 4. Hero Animation & Meetup Detection
-    const meetupNotice = document.getElementById('user-meetup-notice');
-    const meetupName = document.getElementById('user-meetup-name');
-    const meetupLoc = localStorage.getItem('meetup_location');
-    const chatWrapper = document.getElementById('user-chat-wrapper');
-
-    if (chatWrapper) chatWrapper.classList.remove('hidden');
-
-    if (meetupLoc && meetupNotice) {
-        meetupNotice.classList.remove('hidden');
-        const locMap = {
-            'sm_aura': 'SM Aura Premier, BGC',
-            'uptown_mall': 'Uptown Mall, BGC',
-            'venice_grand': 'Venice Grand Canal Mall',
-            'market_market': 'Market! Market!'
-        };
-        if (meetupName) meetupName.textContent = locMap[meetupLoc] || meetupLoc;
-    }
-
-    // 5. Scroll Spy for Glass Dock
-    const sections = document.querySelectorAll('section');
-    const navItems = document.querySelectorAll('.dock-item');
-
-    window.addEventListener('scroll', () => {
-        let current = '';
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.clientHeight;
-            if (pageYOffset >= (sectionTop - 150)) {
-                current = section.getAttribute('id');
-            }
-        });
-
-        navItems.forEach(item => {
-            item.classList.remove('active-dock-item');
-            if (item.getAttribute('href') === `#${current}`) {
-                item.classList.add('active-dock-item');
-            }
-        });
-    });
-
-    // Live Session Status Check
-    const liveBadge = document.getElementById('artist-live-badge');
-    const liveLink = document.getElementById('live-session-link');
+    // ── 5. Live Session Badge (from localStorage) ───────────
+    const liveBadge    = document.getElementById('artist-live-badge');
+    const liveLink     = document.getElementById('live-session-link');
     const isArtistLive = localStorage.getItem('is_live_session') === 'true';
-    const artistLiveUrl = localStorage.getItem('live_meeting_url');
+    const liveUrl      = localStorage.getItem('live_meeting_url');
 
     if (liveBadge && isArtistLive) {
         liveBadge.classList.replace('hidden', 'flex');
-        if (liveLink && artistLiveUrl) {
-            liveLink.href = artistLiveUrl;
-        }
+        if (liveLink && liveUrl) liveLink.href = liveUrl;
     }
 });
-
-
