@@ -95,6 +95,21 @@ INSERT INTO `services` (`id`, `title`, `description`, `image_url`, `order_index`
 (2, 'Colored Drawing Art', '"Evil Demon Slayer" - A masterful triple-panel hand-drawn illustration with vibrant colored pencils and bold Japanese calligraphy.',  'images/colored.jpg',          2),
 (3, 'Digital Masterpiece', '"ASEAN Diversity" - A professional digital commission celebrating Southeast Asian unity and cultural harmony.',                      'images/digital_art.png',      3);
 
+-- --------------------------------------------------------
+
+-- Table structure for table `admin_users`
+CREATE TABLE `admin_users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(255) NOT NULL UNIQUE,
+  `password_hash` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table `admin_users`
+-- Default: adel / admin123
+INSERT INTO `admin_users` (`username`, `password_hash`) VALUES
+('adel', '$2y$10$wL4P6pZ07S9vP8uO2k6F5OfjC9l1r4QZ3S9tW2G4X5rA6B7C8D9E0');
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
