@@ -38,7 +38,23 @@ async function fetchAPI(endpoint) {
 }
 
 function safeImg(src, fallback) {
-    return src && src.length < 500 ? src : (fallback || 'images/portrait_sample.png');
+    if (!src || src.startsWith('data:')) return fallback || 'images/portrait_sample.png';
+    // If already absolute URL, return as-is
+    if (src.startsWith('http')) return src;
+    // Relative path — prepend base for Live Server compatibility
+    return src;
+}
+
+// Build a URL that works whether served from XAMPP or Live Server
+function buildImgUrl(path) {
+    if (!path) return 'images/portrait_sample.png';
+    if (path.startsWith('http') || path.startsWith('data:')) return 'images/portrait_sample.png';
+    // On Live Server (port 5500/5501), images are served by XAMPP at localhost
+    const port = window.location.port;
+    if (port === '5500' || port === '5501') {
+        return `http://localhost/Portrait Drawing/${path}`;
+    }
+    return path; // Relative path works fine on XAMPP directly
 }
 
 // ── 1. Gallery Renderer ──────────────────────────────────────
@@ -71,21 +87,23 @@ window.renderServices = async () => {
     const bookingMedium = document.getElementById('booking-medium');
 
     const data     = await fetchAPI('services') || DEFAULT_SERVICES;
-    const services = data.length ? data : DEFAULT_SERVICES;
+    const services = (data && data.length) ? data : DEFAULT_SERVICES;
 
     if (servicesGrid) {
-        servicesGrid.innerHTML = services.map(s => `
+        servicesGrid.innerHTML = services.map(s => {
+            const imgSrc = buildImgUrl(s.image_url || s.img);
+            return `
             <div class="group border-b border-gray-100 pb-12">
                 <div class="aspect-square bg-[#FDFBF7] overflow-hidden mb-8 relative">
-                    <img src="${safeImg(s.image_url || s.img, 'images/portrait_sample.png')}"
+                    <img src="${imgSrc}"
                          alt="${s.title}"
                          onerror="this.src='images/portrait_sample.png'"
                          class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-all duration-700">
                 </div>
                 <h3 class="text-lg font-black uppercase tracking-[0.2em] mb-4 text-[#1A1A1A] pt-4">${s.title}</h3>
                 <p class="opacity-60 text-[11px] leading-relaxed line-clamp-3">${s.description || s.desc || ''}</p>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
     if (bookingMedium) {

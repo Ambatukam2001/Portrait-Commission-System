@@ -565,7 +565,7 @@ window.addArtworkModal = () => {
                 if (statusEl) statusEl.textContent = 'Uploading image…';
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
-                const upRes = await fetch(`${CONFIG.API_URL}/upload`, { method: 'POST', body: formData });
+                const upRes = await fetch(CONFIG.UPLOAD_URL, { method: 'POST', body: formData });
                 if (!upRes.ok) {
                     const e = await upRes.json().catch(() => ({}));
                     Swal.showValidationMessage('Upload failed: ' + (e.error || `HTTP ${upRes.status}`));
@@ -612,28 +612,36 @@ window.previewAddArtwork = (input) => {
 // ── Load Services into Form (from DB) ────────────────────────
 window.loadServicesToForm = async () => {
     const DEFAULTS = [
-        { id: 1, title: 'Pencil Realism Art',  description: '"BINI Mikha" - Hyper-realistic pencil portrait, meticulously crafted to capture every detail.',   image_url: 'images/portrait_sample.png' },
-        { id: 2, title: 'Digital Drawing Art', description: '"ASEAN Diversity" - Vibrant digital commission celebrating Southeast Asian unity and culture.',     image_url: 'images/digital_art.png'     },
-        { id: 3, title: 'Colored Drawing Art', description: '"Evil Demon Slayer" - Triple-panel illustration with vibrant colored pencils and bold calligraphy.', image_url: 'images/colored.jpg'         }
+        { id: 1, title: 'Pencil Realism Art',  description: '"BINI Mikha" - A breathtaking hyper-realistic pencil portrait.',   image_url: 'images/portrait_sample.png' },
+        { id: 2, title: 'Colored Drawing Art',  description: '"Evil Demon Slayer" - Triple-panel illustration with vibrant colored pencils.', image_url: 'images/colored.jpg' },
+        { id: 3, title: 'Digital Masterpiece',  description: '"ASEAN Diversity" - A professional digital commission.',                         image_url: 'images/digital_art.png'     }
     ];
+
+    // Build correct image src for dashboard preview
+    const previewSrc = (rawPath) => {
+        if (!rawPath || rawPath.startsWith('data:')) return 'images/portrait_sample.png';
+        if (rawPath.startsWith('http')) {
+            // Try to extract relative path from absolute URL (old bad data)
+            const match = rawPath.match(/\/images\/(.+)$/);
+            return match ? `images/${match[1]}` : 'images/portrait_sample.png';
+        }
+        return rawPath; // Clean relative path
+    };
 
     const applyService = (service, i) => {
         const titleEl   = document.getElementById(`service-${i}-title`);
         const descEl    = document.getElementById(`service-${i}-desc`);
         const previewEl = document.getElementById(`service-${i}-preview`);
-        const pathEl    = document.getElementById(`service-${i}-path`); // hidden input
+        const pathEl    = document.getElementById(`service-${i}-path`);
+        const statusEl  = document.getElementById(`service-${i}-status`);
 
-        // Detect bad image_url (absolute URL or base64) and reset to default
-        const rawUrl   = service.image_url || '';
-        const isAbsUrl = rawUrl.startsWith('http') || rawUrl.startsWith('data:');
-        const imgPath  = isAbsUrl
-            ? (DEFAULTS[i - 1]?.image_url || 'images/portrait_sample.png')
-            : (rawUrl || DEFAULTS[i - 1]?.image_url || 'images/portrait_sample.png');
+        const cleanPath = previewSrc(service.image_url || '');
 
-        if (titleEl)   { titleEl.value     = service.title || '';       titleEl.dataset.dbId = service.id; }
+        if (titleEl)   { titleEl.value     = service.title || '';        titleEl.dataset.dbId = service.id; }
         if (descEl)      descEl.value      = service.description || '';
-        if (previewEl)   previewEl.src     = imgPath;
-        if (pathEl)      pathEl.value      = imgPath;  // always relative path
+        if (previewEl)   previewEl.src     = cleanPath;
+        if (pathEl)      pathEl.value      = cleanPath;
+        if (statusEl)    statusEl.textContent = 'No file selected';
     };
 
     try {
@@ -653,7 +661,7 @@ async function uploadImageFile(file, statusEl) {
     if (statusEl) { statusEl.textContent = 'Uploading…'; statusEl.className = 'text-[9px] text-yellow-600 font-bold mt-1'; }
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch(`${CONFIG.API_URL}/upload`, { method: 'POST', body: formData });
+    const res = await fetch(CONFIG.UPLOAD_URL, { method: 'POST', body: formData });
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || `Upload failed (HTTP ${res.status})`);
