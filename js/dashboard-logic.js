@@ -370,30 +370,41 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 });
 
-// Synchronize Gallery Rendering from Cloud
+// ── Admin Gallery Renderer ───────────────────────────────────
 window.renderGallery = async () => {
     const container = document.getElementById('admin-gallery-container');
-    if(!container) return;
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="col-span-full py-20 text-center">
+            <div class="inline-block w-8 h-8 border-4 border-[#C16053] border-t-transparent rounded-full animate-spin"></div>
+        </div>`;
 
     try {
-        const response = await fetch(`${CONFIG.API_URL}/artworks`);
-        const artworks = response.ok ? await response.json() : [];
-        
-        if(artworks.length === 0) {
+        const res = await fetch(`${CONFIG.API_URL}/artworks`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const artworks = await res.json();
+
+        if (!artworks.length) {
             container.innerHTML = `
-                <div class="col-span-full py-32 text-center border-4 border-dashed border-gray-100/50">
+                <div class="col-span-full py-32 text-center border-4 border-dashed border-gray-100">
                     <i data-lucide="image-off" class="w-16 h-16 text-gray-200 mx-auto mb-4"></i>
-                    <p class="text-[10px] font-black uppercase text-gray-300 tracking-[0.3em]">No artworks in gallery</p>
-                </div>
-            `;
+                    <p class="text-[10px] font-black uppercase text-gray-300 tracking-[0.3em]">No artworks yet — upload your first piece!</p>
+                </div>`;
             lucide.createIcons();
             return;
         }
 
         container.innerHTML = artworks.map(art => `
-            <div class="portrait-card group w-full" data-id="${art.id}">
-                <img src="${art.image_url || art.img}" alt="${art.title}" onerror="this.src='${art.fallback || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2'}'">
-                
+            <div class="portrait-card group w-full"
+                 data-id="${art.id}"
+                 data-title="${(art.title || '').replace(/"/g, '&quot;')}"
+                 data-category="${(art.category || '').replace(/"/g, '&quot;')}"
+                 data-size="${(art.size || '').replace(/"/g, '&quot;')}">
+                <img src="${art.image_url || 'images/portrait_sample.png'}"
+                     alt="${art.title}"
+                     onerror="this.src='images/portrait_sample.png'">
+
                 <!-- Admin Controls -->
                 <div class="absolute top-6 right-6 flex flex-col space-y-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-10 group-hover:translate-x-0 z-30">
                     <button onclick="editImage(this)" class="w-12 h-12 bg-white/90 backdrop-blur-md text-[#1A1A1A] flex items-center justify-center hover:bg-[#1A1A1A] hover:text-white transition-all shadow-xl">
@@ -405,10 +416,10 @@ window.renderGallery = async () => {
                 </div>
 
                 <div class="overlay-info">
-                    <p class="text-[9px] uppercase font-black tracking-widest text-[#C16053] mb-2">${art.category}</p>
+                    <p class="text-[9px] uppercase font-black tracking-widest text-[#C16053] mb-2">${art.category || 'Uncategorized'}</p>
                     <h4 class="text-xl font-black uppercase tracking-widest mb-4">${art.title}</h4>
                     <div class="pt-4 border-t border-white/10 flex justify-between items-center">
-                        <span class="text-[9px] font-bold uppercase tracking-widest opacity-60">Size: <span class="artwork-size">${art.size}</span></span>
+                        <span class="text-[9px] font-bold uppercase tracking-widest opacity-60">Size: <span class="artwork-size">${art.size || 'N/A'}</span></span>
                         <i data-lucide="maximize-2" class="w-4 h-4 text-white/40 cursor-pointer" onclick="viewImage(this.closest('.portrait-card'))"></i>
                     </div>
                 </div>
@@ -416,55 +427,60 @@ window.renderGallery = async () => {
         `).join('');
 
         lucide.createIcons();
-    } catch (error) {
-        console.error("Gallery Sync Error:", error);
+    } catch (err) {
+        console.error('Gallery Load Error:', err);
+        container.innerHTML = `
+            <div class="col-span-full py-20 text-center">
+                <p class="text-[#C16053] font-black uppercase tracking-widest text-xs">⚠ Could not load gallery — Is XAMPP running?</p>
+                <p class="text-gray-400 text-[10px] mt-2">${err.message}</p>
+                <button onclick="renderGallery()" class="mt-6 px-6 py-3 bg-[#1A1A1A] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#C16053] transition-all">Retry</button>
+            </div>`;
     }
 };
 
-window.deleteImage = async (btn) => {
-    const card = btn.closest('.portrait-card');
-    const artId = card.getAttribute('data-id');
-    
+// ── Delete Artwork ────────────────────────────────────────────
+window.deleteImage = (btn) => {
+    const card  = btn.closest('.portrait-card');
+    const artId = card?.getAttribute('data-id');
+    if (!artId) return;
+
     Swal.fire({
         title: 'Delete Artwork?',
-        text: "This will permanently remove it from the cloud database.",
+        text: 'This will permanently remove it from the database.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#C16053',
         cancelButtonColor: '#1A1A1A',
         confirmButtonText: 'Yes, Delete'
     }).then(async (result) => {
-        if (result.isConfirmed) {
-            try {
-                const response = await fetch(`${CONFIG.API_URL}/admin/artworks/${artId}`, {
-                    method: 'DELETE'
-                });
-                if(!response.ok) throw new Error('Delete Failed');
-
-                card.classList.add('scale-0', 'opacity-0');
-                setTimeout(() => renderGallery(), 500);
-            } catch (error) {
-                console.error("Delete Error:", error);
-            }
+        if (!result.isConfirmed) return;
+        try {
+            const res = await fetch(`${CONFIG.API_URL}/admin/artworks/${artId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            card.style.transition = 'all 0.4s ease';
+            card.style.transform  = 'scale(0)';
+            card.style.opacity    = '0';
+            setTimeout(() => renderGallery(), 450);
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Delete Failed', text: err.message, confirmButtonColor: '#1A1A1A' });
         }
     });
 };
 
+// ── Edit Artwork ─────────────────────────────────────────────
 window.editImage = (btn) => {
-    const card = btn.closest('.portrait-card');
-    const artId = card.getAttribute('data-id');
-    const title = card.querySelector('h4').textContent;
-    const category = card.querySelector('p').textContent;
-    const size = card.querySelector('.artwork-size').textContent;
+    const card     = btn.closest('.portrait-card');
+    const artId    = card?.getAttribute('data-id');
+    // Read from data attributes — not from DOM text (avoids wrong element selection)
+    const title    = card?.getAttribute('data-title')    || '';
+    const category = card?.getAttribute('data-category') || '';
+    const size     = card?.getAttribute('data-size')     || '';
 
     Swal.fire({
-        title: 'Edit Artwork Details',
+        title: 'Edit Artwork',
         html: `
-            <style>
-                .swal2-input { color: #1A1A1A !important; font-family: 'Outfit', sans-serif; font-size: 14px; margin: 10px auto; }
-                .swal-label { font-size: 10px; font-weight: 900; text-transform: uppercase; color: #C16053; display: block; text-align: left; margin-left: 3rem; }
-            </style>
-            <label class="swal-label">Artwork Name</label>
+            <style>.swal2-input{color:#1A1A1A!important;font-family:'Outfit',sans-serif;font-size:14px;margin:8px auto}.swal-label{font-size:10px;font-weight:900;text-transform:uppercase;color:#C16053;display:block;text-align:left;margin-left:3rem;margin-top:10px}</style>
+            <label class="swal-label">Artwork Title</label>
             <input id="swal-title" class="swal2-input" value="${title}">
             <label class="swal-label">Media Category</label>
             <input id="swal-category" class="swal2-input" value="${category}">
@@ -473,34 +489,25 @@ window.editImage = (btn) => {
         `,
         focusConfirm: false,
         confirmButtonColor: '#1A1A1A',
-        preConfirm: () => {
-            return {
-                title: document.getElementById('swal-title').value,
-                category: document.getElementById('swal-category').value,
-                size: document.getElementById('swal-size').value
-            }
-        }
+        showCancelButton: true,
+        preConfirm: () => ({
+            title:    document.getElementById('swal-title').value.trim(),
+            category: document.getElementById('swal-category').value.trim(),
+            size:     document.getElementById('swal-size').value.trim()
+        })
     }).then(async (result) => {
-        if (result.value) {
-            try {
-                const response = await fetch(`${CONFIG.API_URL}/admin/artworks/${artId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(result.value)
-                });
-                if(!response.ok) throw new Error('Update Failed');
-                
-                renderGallery(); // Sync UI
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Updated!',
-                    text: 'Changes are now live on the cloud database.',
-                    confirmButtonColor: '#1A1A1A'
-                });
-            } catch (error) {
-                console.error("Edit Error:", error);
-            }
+        if (!result.isConfirmed || !result.value?.title) return;
+        try {
+            const res = await fetch(`${CONFIG.API_URL}/admin/artworks/${artId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(result.value)
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            await renderGallery();
+            Swal.fire({ icon: 'success', title: 'Updated!', timer: 1500, showConfirmButton: false });
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Update Failed', text: err.message, confirmButtonColor: '#1A1A1A' });
         }
     });
 };
