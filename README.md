@@ -7,53 +7,74 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+## Portrait Drawing (Pencilation) — Supabase Backend (No npm)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+This system runs as **static HTML + Tailwind CSS + JavaScript** in `public/` and uses **Supabase** as the backend (no PHP/MySQL API).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Supabase URL + anon key
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Edit these files:
 
-## Learning Laravel
+- `public/index.html`
+- `public/portfolio.html`
+- `public/login.html`
+- `public/dashboard.html`
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Fill these meta tags:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```html
+<meta name="supabase-url" content="https://YOUR_PROJECT_ID.supabase.co">
+<meta name="supabase-anon-key" content="YOUR_ANON_PUBLIC_KEY">
+```
 
-## Laravel Sponsors
+They are read by `public/js/supabase.js` to initialize `window.supabaseClient`.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Admin user (Login + Change Password)
 
-### Premium Partners
+#### Create the admin account
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+This project **does not auto-create** an admin user in SQL.
 
-## Contributing
+1. Go to **Supabase Dashboard → Authentication → Users → Add user**
+2. Create a user:
+   - **Email**: `<username>@<login-email-domain>`
+   - **Password**: your admin password
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Default domain (set in page meta tags):
 
-## Code of Conduct
+```html
+<meta name="login-email-domain" content="pencilation.admin">
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Example:
 
-## Security Vulnerabilities
+- Username typed in login form: `adel`
+- Supabase Auth email to create: `adel@pencilation.admin`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+#### How login works
 
-## License
+The login form still uses **username + password**, but the code converts username → email and signs in with Supabase Auth:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- `public/js/pencilation-db.js` → `adminEmailFromUsername()` and `login()`
+- `supabase.auth.signInWithPassword({ email, password })`
+
+#### Change Password (Dashboard → Security tab)
+
+The “Change Password” UI calls:
+
+- `public/js/dashboard-logic.js` → `handlePasswordUpdate()`
+- which calls `PencilationDB.updateAdminPassword(currentPassword, newPassword)`
+
+What it does:
+
+- **Re-authenticates** using the current password (with your session email)
+- Updates password via `supabase.auth.updateUser({ password })`
+
+### Database schema
+
+Run `supabase/schema.sql` in Supabase SQL Editor.
+
+Notes:
+
+- `bookings.status` defaults to **`pending`**
+- Row Level Security is **disabled** in the SQL for quick setup (as requested)
