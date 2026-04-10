@@ -8,8 +8,7 @@
 </p>
 
 <h1> Pencilation Commission Booking System </h1>
-Client Booking & Commission Management Platform/ Supabase Backend (No npm)
-
+<h6> Client Booking & Commission Management Platform/ Supabase Backend (No npm) </h6>
 
 This project is a Pencilation Commission Booking System designed for managing client bookings for custom pencil artwork commissions. It allows users to submit booking requests, view available services, and track their requests through a structured and user-friendly interface.
 
