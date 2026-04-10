@@ -216,13 +216,18 @@
 
         async login(username, password) {
             await waitForSupabase();
-            const email = window.PencilationDB.adminEmailFromUsername(username);
-            const { data, error } = await sb().auth.signInWithPassword({ email, password });
+            const uname = (username || '').trim();
+            const pass = String(password ?? '');
+
+            // Supabase Auth (secure)
+            const email = window.PencilationDB.adminEmailFromUsername(uname);
+            const { data, error } = await sb().auth.signInWithPassword({ email, password: pass });
             if (error) throw error;
             return {
-                username: (username || '').trim(),
+                username: uname,
                 role: 'admin',
                 session: data.session,
+                mode: 'auth',
             };
         },
 
@@ -253,10 +258,24 @@
                 window.location.href = 'login.html';
                 return false;
             }
+
             const {
                 data: { session },
             } = await sb().auth.getSession();
             if (!session) {
+                window.location.href = 'login.html';
+                return false;
+            }
+
+            // Confirm the signed-in user is allowlisted as admin.
+            const { data: isAdmin, error } = await sb().rpc('is_admin');
+            if (error) {
+                await sb().auth.signOut();
+                window.location.href = 'login.html';
+                return false;
+            }
+            if (!isAdmin) {
+                await sb().auth.signOut();
                 window.location.href = 'login.html';
                 return false;
             }

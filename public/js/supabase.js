@@ -9,8 +9,9 @@ function readMeta(name) {
     return (el?.getAttribute('content') || '').trim();
 }
 
-const url = readMeta('https://kghxzdzhpjqmrxyjoepq.supabase.co');
-const key = readMeta('sb_publishable_ql0R1sAmizZ2I7mbcRoxJw_By9OhiJ5');
+// Read project credentials from meta tags (set in each HTML page).
+const url = readMeta('supabase-url');
+const key = readMeta('supabase-anon-key');
 
 if (url && key) {
     window.supabaseClient = createClient(url, key);
