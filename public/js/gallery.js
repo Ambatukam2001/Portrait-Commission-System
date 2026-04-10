@@ -3,14 +3,8 @@
 // ============================================================
 
 // ── Default Fallback Data (when API is unreachable) ─────────
-const DEFAULT_ARTWORKS = [
-    { id: 1, title: 'Pencil Realism',    category: 'Graphite',          size: 'A4',     image_url: 'images/portrait_sample.png' },
-    { id: 2, title: 'Digital Fauvism',   category: 'Digital Art',       size: 'Digital',image_url: 'images/digital_art.png'     },
-    { id: 3, title: 'Colored Portrait',  category: 'Colored Pencil',    size: 'A3',     image_url: 'images/colored.jpg'         },
-    { id: 4, title: 'Graceful Glance',   category: 'Graphite Study',    size: '9x12in', image_url: 'images/gallery_1.jpg'       },
-    { id: 5, title: 'Portrait of ADEL',  category: 'Featured Work',     size: 'A4',     image_url: 'images/adel.JPG'            },
-    { id: 6, title: 'Artist\'s Vision',  category: 'Mixed Media',       size: 'A3',     image_url: 'images/artist_adel.png'     }
-];
+// NOTE: DEFAULT_ARTWORKS removed — portfolio only shows real DB artworks.
+// Services and rates still have fallbacks for display continuity.
 
 const DEFAULT_SERVICES = [
     { id: 1, title: 'Pencil Realism Art',   description: 'Hyper-realistic pencil portrait capturing every fine detail.',       image_url: 'images/portrait_sample.png' },
@@ -53,23 +47,48 @@ window.renderGallery = async () => {
     const galleryContainer = document.getElementById('gallery-container');
     if (!galleryContainer) return;
 
-    const data = await fetchAPI('artworks') || DEFAULT_ARTWORKS;
-    const artworks = data.length ? data : DEFAULT_ARTWORKS;
+    // Show loading spinner
+    galleryContainer.innerHTML = `
+        <div class="col-span-full flex flex-col items-center justify-center py-24 gap-4 opacity-40">
+            <div class="w-10 h-10 border-4 border-[#C16053] border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-[10px] font-black uppercase tracking-widest">Loading Portfolio...</p>
+        </div>`;
 
-    galleryContainer.innerHTML = artworks.map(art => `
-        <div class="portrait-card" onclick="viewImage(this)">
-            <img src="${safeImg(art.image_url || art.img, 'images/portrait_sample.png')}"
-                 alt="${art.title}"
-                 onerror="this.src='images/portrait_sample.png'">
-            <div class="overlay-info">
-                <p class="text-[10px] uppercase tracking-widest mb-1 italic opacity-60">${art.category}</p>
-                <h4 class="text-xl font-bold uppercase tracking-widest mb-2">${art.title}</h4>
-                <div class="flex items-center justify-between border-t border-white/20 pt-3 mt-1">
-                    <span class="text-[10px] font-black uppercase tracking-widest">Size: <span class="artwork-size">${art.size}</span></span>
+    try {
+        await PencilationDB.waitForSupabase();
+        const artworks = await PencilationDB.listArtworks();
+
+        if (!artworks || !artworks.length) {
+            galleryContainer.innerHTML = `
+                <div class="col-span-full flex flex-col items-center justify-center py-32 gap-6 opacity-40">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <p class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">No artworks yet — check back soon!</p>
+                </div>`;
+            return;
+        }
+
+        galleryContainer.innerHTML = artworks.map(art => `
+            <div class="portrait-card" onclick="viewImage(this)">
+                <img src="${safeImg(art.image_url || art.img, 'images/portrait_sample.png')}"
+                     alt="${art.title}"
+                     onerror="this.src='images/portrait_sample.png'">
+                <div class="overlay-info">
+                    <p class="text-[10px] uppercase tracking-widest mb-1 italic opacity-60">${art.category}</p>
+                    <h4 class="text-xl font-bold uppercase tracking-widest mb-2">${art.title}</h4>
+                    <div class="flex items-center justify-between border-t border-white/20 pt-3 mt-1">
+                        <span class="text-[10px] font-black uppercase tracking-widest">Size: <span class="artwork-size">${art.size}</span></span>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `).join('');
+    } catch (e) {
+        console.warn('Gallery load failed:', e.message);
+        galleryContainer.innerHTML = `
+            <div class="col-span-full flex flex-col items-center justify-center py-24 gap-4">
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-[#C16053]">⚠ Could not load portfolio</p>
+                <button onclick="renderGallery()" class="px-6 py-3 bg-[#1A1A1A] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#C16053] transition-all">Retry</button>
+            </div>`;
+    }
 };
 
 // ── 2. Services Renderer ─────────────────────────────────────
