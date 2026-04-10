@@ -216,77 +216,105 @@
 
         async login(username, password) {
             await waitForSupabase();
-            const uname = (username || '').trim();
-            const pass = String(password ?? '');
+            const uname = (username || '').trim().toLowerCase();
+            const pass = String(password ?? '').trim();
 
-            // Supabase Auth (secure)
-            const email = window.PencilationDB.adminEmailFromUsername(uname);
-            const { data, error } = await sb().auth.signInWithPassword({ email, password: pass });
-            if (error) {
-                const hint =
-                    ' Use your admin username (not an email). Password must match the user in Supabase → Authentication (email is username@' +
-                    ((typeof CONFIG !== 'undefined' && CONFIG.LOGIN_EMAIL_DOMAIN) || 'pencilation.admin') +
-                    ').';
-                const msg = (error.message || 'Invalid credentials.') + hint;
-                throw new Error(msg);
+            if (!uname || !pass) throw new Error('Username and password are required.');
+
+            // Query the admin_users table directly — credentials are NOT in Supabase Auth.
+            const { data, error } = await sb()
+                .from('admin_users')
+                .select('id, username, password_hash')
+                .eq('username', uname)
+                .maybeSingle();
+
+            if (error) throw new Error('Login error: ' + (error.message || 'Database error.'));
+            if (!data) throw new Error('Invalid username or password.');
+
+            // Simple plain-text comparison (password_hash stores the raw password).
+            if (data.password_hash !== pass) {
+                throw new Error('Invalid username or password.');
             }
-            return {
-                username: uname,
+
+            // Persist a lightweight session in localStorage.
+            localStorage.setItem('admin_session', JSON.stringify({
+                id: data.id,
+                username: data.username,
                 role: 'admin',
-                session: data.session,
-                mode: 'auth',
+                at: Date.now(),
+            }));
+
+            return {
+                username: data.username,
+                role: 'admin',
+                session: null,
+                mode: 'table',
             };
         },
 
         async signOut() {
-            await waitForSupabase();
-            await sb().auth.signOut();
+            // Table-based auth — just clear the localStorage session.
+            localStorage.removeItem('admin_session');
+            localStorage.removeItem('user_name');
+            localStorage.removeItem('user_role');
         },
 
         async updateAdminPassword(currentPassword, newPassword) {
             await waitForSupabase();
-            const {
-                data: { session },
-            } = await sb().auth.getSession();
-            if (!session?.user?.email) throw new Error('Not signed in');
-            const email = session.user.email;
-            const { error: e1 } = await sb().auth.signInWithPassword({
-                email,
-                password: currentPassword,
-            });
-            if (e1) throw new Error('Incorrect current passkey.');
-            const { error: e2 } = await sb().auth.updateUser({ password: newPassword });
+
+            // Verify against the admin_users table.
+            const raw = localStorage.getItem('admin_session');
+            if (!raw) throw new Error('Not signed in.');
+            const sess = JSON.parse(raw);
+
+            const { data, error } = await sb()
+                .from('admin_users')
+                .select('id, password_hash')
+                .eq('username', sess.username)
+                .maybeSingle();
+            if (error || !data) throw new Error('Session error.');
+            if (data.password_hash !== String(currentPassword)) throw new Error('Incorrect current passkey.');
+
+            // Update password in the table.
+            const { error: e2 } = await sb()
+                .from('admin_users')
+                .update({ password_hash: String(newPassword) })
+                .eq('id', data.id);
             if (e2) throw e2;
         },
 
         async requireAdminSession() {
-            await waitForSupabase();
-            if (!window.supabaseClient) {
+            // Table-based auth — check localStorage session.
+            const raw = localStorage.getItem('admin_session');
+            if (!raw) {
                 window.location.href = 'login.html';
                 return false;
             }
-
-            const {
-                data: { session },
-            } = await sb().auth.getSession();
-            if (!session) {
+            try {
+                const sess = JSON.parse(raw);
+                if (!sess || !sess.username || sess.role !== 'admin') {
+                    localStorage.removeItem('admin_session');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                // Optionally verify the username still exists in DB.
+                await waitForSupabase();
+                const { data } = await sb()
+                    .from('admin_users')
+                    .select('id')
+                    .eq('username', sess.username)
+                    .maybeSingle();
+                if (!data) {
+                    localStorage.removeItem('admin_session');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                return true;
+            } catch {
+                localStorage.removeItem('admin_session');
                 window.location.href = 'login.html';
                 return false;
             }
-
-            // Confirm the signed-in user is allowlisted as admin.
-            const { data: isAdmin, error } = await sb().rpc('is_admin');
-            if (error) {
-                await sb().auth.signOut();
-                window.location.href = 'login.html';
-                return false;
-            }
-            if (!isAdmin) {
-                await sb().auth.signOut();
-                window.location.href = 'login.html';
-                return false;
-            }
-            return true;
         },
 
         subscribeBookings(onChange) {
