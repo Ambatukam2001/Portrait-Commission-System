@@ -1003,7 +1003,7 @@ window.logout = () => {
             localStorage.removeItem('user_role');
             localStorage.removeItem('user_name');
             localStorage.removeItem('user_email');
-            window.location.href = 'index.html';
+            window.location.href = 'app.html';
         }
     });
 };

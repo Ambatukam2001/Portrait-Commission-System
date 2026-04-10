@@ -1,604 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- API → Project Settings → API: Project URL + anon (public) key -->
-    <meta name="supabase-url" content="https://kghxzdzhpjqmrxyjoepq.supabase.co">
-    <meta name="supabase-anon-key" content="sb_publishable_ql0R1sAmizZ2I7mbcRoxJw_By9OhiJ5">
-    <meta name="login-email-domain" content="pencilation.admin">
-    <meta name="description" content="Pencilation - Bespoke Portrait Drawing & Commission System">
-    <title>Pencilation | Artistic Portrait Booking System</title>
+    <title>Welcome to Pencilation Studio</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/public-pages.css">
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#C16053',
+                        dark: '#1A1A1A',
+                        light: '#FDFBF7'
+                    },
+                    animation: {
+                        'float': 'float 8s ease-in-out infinite',
+                        'float-delayed': 'float 8s ease-in-out 4s infinite',
+                        'blob': 'blob 10s infinite',
+                        'fade-in': 'fadeIn 1.2s ease-out forwards',
+                        'slide-up': 'slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0) rotate(6deg)' },
+                            '50%': { transform: 'translateY(-20px) rotate(4deg)' },
+                        },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(50px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css?v=10.0">
-    <!-- Leaflet Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-
+    
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #050505;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+        }
+        /* Delay classes for cascaded animations */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+        .delay-600 { animation-delay: 600ms; }
+        .delay-2000 { animation-delay: 2000ms; }
+        .delay-4000 { animation-delay: 4000ms; }
+    </style>
 </head>
+<body class="relative min-h-screen overflow-x-hidden overflow-y-auto md:overflow-hidden flex items-center justify-center text-white selection:bg-primary selection:text-white scroll-smooth">
 
-<body class="bg-[#FDFBF7] text-[#1A1A1A] overflow-x-hidden">
-    <!-- Absolute Header (Scrolls away natively) -->
-    <nav id="main-nav"
-        class="absolute top-0 left-0 right-0 z-[999] py-8 px-6 md:px-12 flex justify-between items-center w-full">
-        <div class="logo font-display text-2xl md:text-3xl font-black flex items-center space-x-2">
-            <i data-lucide="pencil" class="text-[#C16053] w-5 h-5 md:w-6 md:h-6"></i>
-            <span>Pencilation</span>
-        </div>
-
-
-        <!-- Mobile Navigation Toggle -->
-        <div class="md:hidden flex items-center justify-center space-x-4">
-            <button id="mobile-toggle" class="hamburger p-2 focus:outline-none">
-                <span class="line"></span>
-                <span class="line"></span>
-                <span class="line"></span>
-            </button>
-        </div>
-
-        <!-- Admin Access Button -->
-        <div id="nav-auth-container" class="md:block hidden">
-            <a href="login.html"
-                class="bg-white text-[#1A1A1A] border-none shadow-xl px-10 py-4 text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-[#C16053] hover:text-white transition-all transform hover:-translate-y-1 inline-block">
-                Artist Login
-            </a>
-        </div>
-    </nav>
-
-    <!-- Mobile Navigation Overlay (New) -->
-    <div id="mobile-menu"
-        class="fixed inset-0 bg-[#FDFBF7] z-[1000] transform translate-x-full transition-transform duration-500 ease-in-out md:hidden flex flex-col items-center justify-center space-y-12 p-8">
-        <button id="mobile-close" class="absolute top-8 right-12 text-[#1A1A1A]">
-            <i data-lucide="x" class="w-8 h-8"></i>
-        </button>
-        <ul class="text-center space-y-8">
-            <li><a href="#hero"
-                    class="mobile-nav-link text-3xl font-black uppercase tracking-tighter hover:text-[#C16053]">Overview</a>
-            </li>
-            <li><a href="#services"
-                    class="mobile-nav-link text-3xl font-black uppercase tracking-tighter hover:text-[#C16053]">Services</a>
-            </li>
-            <li><a href="#about"
-                    class="mobile-nav-link text-3xl font-black uppercase tracking-tighter hover:text-[#C16053]">About
-                    Me</a></li>
-            <li><a href="#rates"
-                    class="mobile-nav-link text-3xl font-black uppercase tracking-tighter hover:text-[#C16053]">Pricing</a>
-            </li>
-            <li><a href="#gallery"
-                    class="mobile-nav-link text-3xl font-black uppercase tracking-tighter hover:text-[#C16053]">Portfolio</a>
-            </li>
-            <li><a href="#booking"
-                    class="mobile-nav-link text-3xl font-black uppercase tracking-tighter text-[#C16053]">Book
-                    Now</a></li>
-        </ul>
-        <a href="login.html"
-            class="bg-[#1A1A1A] text-white px-12 py-5 font-black uppercase tracking-[0.4em] text-xs">Artist Login</a>
+    <!-- Hero Background Image with Complex Gradients -->
+    <div class="absolute inset-0 z-0">
+        <img src="images/artist_adel.png" alt="Artist Details" class="w-full h-full object-cover opacity-20 object-top scale-105 transform origin-center transition-transform duration-[30s] ease-out hover:scale-110">
+        <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/90 to-[#050505]/40"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-[#050505] via-transparent to-[#050505]/80"></div>
     </div>
 
-    <!-- Main Content -->
-    <main>
-        <!-- Hero Section -->
-        <section id="hero" class="min-h-screen relative flex items-center px-12 pt-32 pb-24">
-            <!-- Modern Side Element (Henri Matisse Inspired Overlay) -->
-            <div class="absolute right-0 top-0 w-1/2 h-full bg-[#1A1A1A] hidden md:block"
-                style="clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%);">
-                <div class="relative w-full h-full flex items-center justify-center">
-                    <img src="images/adel.JPG" alt="Artist Adel Thumbs Up"
-                        class="auth-img absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[70%] opacity-100 drop-shadow-2xl">
-                    <div class="absolute top-[20%] right-[10%] text-white text-right space-y-4">
-                        <p class="font-display text-8xl leading-none">FAUVISM<br>PORTRAIT</p>
-                        <p class="font-sans text-sm tracking-[0.5em] text-[#C16053]">EST. 2024</p>
+    <!-- Animated Ambient Lighting Background -->
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-[10%] -left-32 w-[600px] h-[600px] bg-primary/20 rounded-full mix-blend-screen filter blur-[120px] opacity-60 animate-blob"></div>
+        <div class="absolute top-[30%] -right-32 w-[700px] h-[700px] bg-[#632921]/30 rounded-full mix-blend-screen filter blur-[120px] opacity-50 animate-blob delay-2000"></div>
+        <div class="absolute -bottom-40 left-1/4 w-[800px] h-[800px] bg-[#4a1c15]/20 rounded-full mix-blend-screen filter blur-[150px] opacity-40 animate-blob delay-4000"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 w-full max-w-7xl px-6 py-24 md:px-12 md:py-0 min-h-screen flex flex-col md:flex-row items-center justify-between gap-16 md:gap-8">
+        
+        <!-- Left Column: Typography & Action -->
+        <div class="flex-1 w-full max-w-2xl flex flex-col justify-center">
+            
+            <!-- Live Indicator -->
+            <div class="inline-flex items-center space-x-3 px-5 py-2.5 rounded-full glass-panel opacity-0 animate-fade-in w-fit mb-10 border-white/10">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                </span>
+                <span class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">New Commission System Online</span>
+            </div>
+
+            <!-- Headline -->
+            <h1 class="text-6xl sm:text-7xl lg:text-[7.5rem] font-black leading-[0.85] tracking-tighter mb-8 opacity-0 animate-slide-up delay-100 uppercase drop-shadow-2xl">
+                The Art<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-gray-600 inline-block mt-2">Of Soul.</span>
+            </h1>
+
+            <!-- Description -->
+            <p class="text-lg sm:text-xl text-gray-400 font-light leading-[1.8] mb-12 opacity-0 animate-slide-up delay-200 max-w-lg">
+                Step into <strong class="text-white font-bold">Pencilation</strong>. An exclusive digital sanctuary for bespoke portrait commissions. Experience raw emotion captured through hyper-realistic graphite, dynamic digital fauvism, and mixed multimedia mastery.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 opacity-0 animate-slide-up delay-300 w-full sm:w-auto">
+                <a href="app.html" class="flex-1 sm:flex-none flex items-center justify-center space-x-4 bg-primary text-white px-10 py-6 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white hover:text-dark transition-all duration-500 transform hover:-translate-y-1 shadow-[0_20px_40px_-15px_rgba(193,96,83,0.4)] group overflow-hidden relative">
+                    <span class="relative z-10">Enter Portfolio</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4 relative z-10 transform group-hover:translate-x-1 transition-transform duration-300"></i>
+                    <div class="absolute inset-0 h-full w-full bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 z-0"></div>
+                </a>
+                
+                <a href="app.html#booking" class="flex-1 sm:flex-none flex items-center justify-center space-x-4 glass-panel text-gray-300 hover:text-white hover:border-white/40 px-10 py-6 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-500 group">
+                    <i data-lucide="calendar-plus" class="w-4 h-4 text-gray-400 group-hover:text-white transition-colors duration-300"></i>
+                    <span>Book Session</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Right Column: Stunning Floating Visuals (Hidden on Mobile for cleaner UI) -->
+        <div class="hidden lg:flex flex-1 relative h-[650px] items-center justify-center w-full opacity-0 animate-fade-in delay-500 perspective-1000">
+            
+            <!-- Floating Image 1 (Front/Right) -->
+            <div class="absolute right-4 top-10 w-72 h-[22rem] glass-panel rounded-[2rem] p-3 transform rotate-[6deg] animate-float hover:rotate-0 hover:scale-105 hover:z-30 transition-all duration-700 shadow-2xl cursor-pointer pointer-events-auto">
+                <div class="w-full h-full overflow-hidden rounded-[1.5rem] relative group">
+                    <img src="images/colored.jpg" alt="Featured Colored Art" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                        <div>
+                            <p class="text-[9px] text-primary font-black uppercase tracking-widest mb-1">Featured Medium</p>
+                            <p class="font-bold text-sm tracking-widest uppercase">Colored Masterpiece</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="max-w-3xl space-y-10 relative z-20 animate-fade-in-up">
-                <!-- Active Meetup Notification for User -->
-                <div id="user-meetup-notice"
-                    class="hidden bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl max-w-xs flex items-center space-x-4">
-                    <div class="w-10 h-10 bg-[#C16053] rounded-full flex items-center justify-center text-white">
-                        <i data-lucide="map-pin" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black uppercase tracking-widest text-[#C16053]">Meet-up Set!</p>
-                        <p id="user-meetup-name" class="text-xs font-bold text-white uppercase tracking-tighter">SM Aura
-                            Premier, BGC</p>
-                    </div>
-                </div>
-
-                <p class="text-xs tracking-[0.3em] uppercase text-[#C16053] font-bold">Custom Portraits & Drawings</p>
-                <h1 class="text-6xl md:text-8xl leading-[0.9] font-black">"HI<br>IM<br>ASSHING"</h1>
-                <p class="text-lg max-w-md opacity-80">
-                    Capturing souls through monochromatic and vibrant Fauvism-inspired digital and traditional
-                    portraiture. Bespoke art tailored for you.
-                </p>
-                <div class="flex flex-wrap gap-4 pt-6 relative z-30">
-                    <a href="#booking"
-                        class="bg-[#1A1A1A] text-white px-10 py-5 font-black uppercase tracking-widest text-xs hover:bg-[#C16053] transition-all hover:scale-105 shadow-xl">Book
-                        Commission</a>
-                    <a href="#gallery"
-                        class="border-2 border-[#1A1A1A] px-10 py-5 font-black uppercase tracking-widest text-xs hover:bg-[#1A1A1A] hover:text-white transition-all hover:scale-105 shadow-lg">View
-                        My Works</a>
-                </div>
-            </div>
-        </section>
-
-
-        <!-- Services Section -->
-        <section id="services" class="py-32 px-12 bg-white">
-            <div class="max-w-7xl mx-auto">
-                <div class="flex flex-col md:flex-row md:items-end justify-between mb-20">
-                    <div class="space-y-4">
-                        <h2 class="text-5xl md:text-7xl font-black leading-relaxed mb-6 uppercase tracking-normal">SERVICES</h2>
-                        <p class="max-w-md opacity-60">Professional portraiture spanning multiple mediums and styles to
-                            fit your aesthetic preferences.</p>
-                    </div>
-                    <div class="text-right hidden md:block">
-                        <span class="text-8xl font-black opacity-5">01</span>
-                    </div>
-                </div>
-
-                <div id="services-grid-container" class="grid md:grid-cols-3 gap-12">
-                    <!-- Srv 1 -->
-                    <div class="group border-b border-gray-100 pb-12">
-                        <div class="aspect-square bg-[#FDFBF7] overflow-hidden mb-8 relative">
-                            <img src="images/portrait_sample.png" alt="Pencil Realism Illustration"
-                                class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-all duration-700">
+            <!-- Floating Image 2 (Back/Left) -->
+            <div class="absolute left-4 bottom-20 w-64 h-80 glass-panel rounded-[2rem] p-3 transform -rotate-[4deg] animate-float-delayed hover:rotate-0 hover:scale-105 hover:z-30 transition-all duration-700 shadow-2xl cursor-pointer pointer-events-auto">
+                <div class="w-full h-full overflow-hidden rounded-[1.5rem] relative group">
+                    <img src="images/digital_art.png" alt="Featured Digital Art" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
+                        <div>
+                            <p class="text-[9px] text-primary font-black uppercase tracking-widest mb-1">Featured Medium</p>
+                            <p class="font-bold text-sm tracking-widest uppercase">Digital Fauvism</p>
                         </div>
-                        <h3 class="text-xl font-bold uppercase tracking-normal mb-8 text-[#1A1A1A] pt-4 leading-[1.8] break-all">
-                            Pencil Realism Art</h3>
-                        <p class="opacity-60 text-xs leading-[1.8] line-clamp-3">A breathtaking hyper-realistic
-                            pencil portrait, meticulously crafted to capture every fine detail and micro-expressions for
-                            a truly lifelike finish.</p>
-                    </div>
-                    <!-- Srv 2 -->
-                    <div class="group border-b border-gray-100 pb-12">
-                        <div class="aspect-square bg-[#FDFBF7] overflow-hidden mb-8 relative">
-                            <img src="images/digital_art.png" alt="Digital Drawing Art"
-                                class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-all duration-700">
-                        </div>
-                        <h3 class="text-xl font-bold uppercase tracking-normal mb-8 text-[#1A1A1A] pt-4 leading-[1.8] break-all">
-                            Digital Drawing Art</h3>
-                        <p class="opacity-60 text-xs leading-[1.8] line-clamp-3">A vibrantly symbolic celebration
-                            of Southeast Asian unity, educational research, and cultural harmony through professional
-                            digital commission.</p>
-                    </div>
-                    <!-- Srv 3 -->
-                    <div class="group border-b border-gray-100 pb-12">
-                        <div class="aspect-square bg-[#FDFBF7] overflow-hidden mb-8 relative">
-                            <img src="images/colored.jpg" alt="Colored Drawing Art"
-                                class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-all duration-700">
-                        </div>
-                        <h3 class="text-xl font-bold uppercase tracking-normal mb-8 text-[#1A1A1A] pt-4 leading-[1.8] break-all">
-                            Colored Drawing Art</h3>
-                        <p class="opacity-60 text-xs leading-[1.8] line-clamp-3">A masterful triple-panel
-                            hand-drawn illustration featuring vibrant colored pencils, markers, and bold Japanese
-                            calligraphy.</p>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <!-- About Section -->
-        <section id="about" class="py-32 px-12 bg-[#1A1A1A] text-white">
-            <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20">
-                <div class="flex-1 relative">
-                    <div class="absolute -top-10 -left-10 w-full h-full border border-white/20"></div>
-                    <img src="images/artist_adel.png" class="w-full h-[400px] md:h-[600px] object-cover relative z-10">
-                    <div
-                        class="absolute bottom-10 -right-10 bg-[#C16053] p-12 z-20 text-white font-display text-4xl hidden lg:block animate-bounce shadow-2xl">
-                        AESTHETIC<br>VISIONARY.
-                    </div>
+            <!-- System Central Badge -->
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 glass-panel px-8 py-6 rounded-3xl flex items-center space-x-5 shadow-[0_30px_60px_rgba(0,0,0,0.6)] border border-white/20 backdrop-blur-3xl">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-primary via-[#C16053] to-[#73352d] flex items-center justify-center shadow-lg relative">
+                    <i data-lucide="shield-check" class="text-white w-6 h-6 relative z-10"></i>
+                    <div class="absolute inset-0 rounded-full border border-white/30 animate-ping"></div>
                 </div>
-                <!-- Main Workspace (Arranged with Left Spacing) -->
-                <div class="flex-1 p-8 lg:p-14 lg:pl-28 w-full max-w-[1920px]">
-                    <h2 class="text-5xl md:text-7xl font-black leading-none uppercase">About<br>Me</h2>
-                    <p class="text-lg opacity-80 italic">"Art is not what you see, but what you make others see."</p>
-                    <p class="opacity-60 leading-relaxed">
-                        I am an independent portrait artist specializing in capturing the essence of the human spirit.
-                        My work blends classical techniques with a modern aesthetic, focusing on emotion and
-                        storytelling. Whether it's a gift or a personal keepsake, I ensure every stroke translates your
-                        vision into reality.
+                <div>
+                    <h4 class="font-black uppercase tracking-[0.15em] text-sm text-white drop-shadow-md">System Verified</h4>
+                    <p class="text-[9px] text-gray-300 font-bold uppercase tracking-[0.2em] mt-1.5 flex items-center">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></span>
+                        Secure Booking
                     </p>
-                    <div class="flex space-x-12 pt-8">
-                        <div>
-                            <p class="text-4xl font-black">500+</p>
-                            <p class="text-xs tracking-widest text-[#C16053] font-bold uppercase">Commissions</p>
-                        </div>
-                        <div>
-                            <p class="text-4xl font-black">98%</p>
-                            <p class="text-xs tracking-widest text-[#C16053] font-bold uppercase">Satisfaction</p>
-                        </div>
-                    </div>
                 </div>
             </div>
-        </section>
 
-        <!-- Rates & Sizes (New Section) -->
-        <section id="rates" class="py-32 px-12 bg-white">
-            <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
-                <div class="md:w-1/3 space-y-8">
-                    <h2 class="text-6xl font-black uppercase tracking-tighter leading-none">SERVICE<br><span
-                            class="text-[#C16053]">LEVELS.</span></h2>
-                    <div class="space-y-6 pt-10 border-t border-gray-100">
-                        <div class="flex items-center space-x-6 group">
-                            <div
-                                class="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center transition-transform group-hover:scale-110">
-                                <i data-lucide="check-circle" class="w-6 h-6"></i>
-                            </div>
-                            <p class="text-xs font-black uppercase tracking-widest italic opacity-50">Free frame
-                                included</p>
-                        </div>
-                        <div class="flex items-center space-x-6 group">
-                            <div
-                                class="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center transition-transform group-hover:scale-110">
-                                <i data-lucide="truck" class="w-6 h-6"></i>
-                            </div>
-                            <p class="text-xs font-black uppercase tracking-widest italic opacity-50">Free delivery
-                                service</p>
-                        </div>
-                        <div class="flex items-center space-x-6 group">
-                            <div
-                                class="w-12 h-12 bg-green-50 text-green-600 rounded-full flex items-center justify-center transition-transform group-hover:scale-110">
-                                <i data-lucide="shield-check" class="w-6 h-6"></i>
-                            </div>
-                            <p class="text-xs font-black uppercase tracking-widest italic opacity-50">Professional
-                                sealing</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="rates-grid-container" class="md:w-2/3 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- 6x8 -->
-                    <div
-                        class="p-8 border-2 border-gray-100 rounded-[3rem] hover:border-[#1A1A1A] transition-all group flex flex-col justify-between h-full bg-white">
-                        <div>
-                            <p
-                                class="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-6 tracking-[0.2em]">
-                                Mini Portrait</p>
-                            <h4 class="text-4xl font-black mb-2 uppercase">6x8</h4>
-                            <p class="text-[9px] font-black uppercase text-[#C16053] tracking-[0.3em] mb-12 italic">
-                                Premium Quality</p>
-                        </div>
-                        <div class="text-xl font-black tracking-widest">
-                            <span class="text-sm opacity-30">₱</span>300 - 400
-                        </div>
-                    </div>
-                    <!-- 8.5x11 -->
-                    <div
-                        class="p-8 bg-[#1A1A1A] text-white rounded-[3rem] shadow-2xl relative group flex flex-col justify-between h-full">
-                        <div
-                            class="absolute -top-4 -right-4 bg-[#C16053] text-[9px] font-black uppercase px-6 py-2 rounded-full tracking-widest shadow-xl">
-                            Standard</div>
-                        <div>
-                            <p
-                                class="text-[10px] font-black uppercase tracking-widest text-[#C16053] mb-6 tracking-[0.2em]">
-                                Letter Format</p>
-                            <h4 class="text-4xl font-black mb-2 uppercase">8.5x11</h4>
-                            <p class="text-[9px] font-black uppercase opacity-30 tracking-[0.3em] mb-12 italic">Most
-                                Popular Choice</p>
-                        </div>
-                        <div class="text-xl font-black tracking-widest">
-                            <span class="text-sm opacity-30">₱</span>400 - 700
-                        </div>
-                    </div>
-                    <!-- A4 -->
-                    <div
-                        class="p-8 border-2 border-gray-100 rounded-[3rem] hover:border-[#1A1A1A] transition-all group flex flex-col justify-between h-full bg-white">
-                        <div>
-                            <p
-                                class="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-6 tracking-[0.2em]">
-                                Standard Size</p>
-                            <h4 class="text-4xl font-black mb-2 uppercase">A4</h4>
-                            <p class="text-[9px] font-black uppercase text-[#C16053] tracking-[0.3em] mb-12 italic">
-                                Premium Quality</p>
-                        </div>
-                        <div class="text-xl font-black tracking-widest">
-                            <span class="text-sm opacity-30">₱</span>500 - 800
-                        </div>
-                    </div>
-                    <!-- 12x18 -->
-                    <div
-                        class="p-8 border-2 border-gray-100 rounded-[3rem] hover:border-[#1A1A1A] transition-all group flex flex-col justify-between h-full bg-white">
-                        <div>
-                            <p
-                                class="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-6 tracking-[0.2em]">
-                                Large Scale</p>
-                            <h4 class="text-4xl font-black mb-2 uppercase">12x18</h4>
-                            <p class="text-[9px] font-black uppercase text-[#C16053] tracking-[0.3em] mb-12 italic">
-                                Masterpiece Size</p>
-                        </div>
-                        <div class="text-xl font-black tracking-widest">
-                            <span class="text-sm opacity-30">₱</span>1k - 1.5k
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Gallery Section -->
-        <section id="gallery" class="py-32 px-12 bg-[#FDFBF7]">
-            <div class="max-w-7xl mx-auto">
-                <div class="flex flex-col md:flex-row md:items-end justify-between mb-20">
-                    <div class="space-y-4">
-                        <h2 class="text-5xl md:text-7xl font-black">PORTFOLIO</h2>
-                        <p class="max-w-md opacity-60">A curated collection of my most recent works and artistic
-                            explorations.</p>
-                    </div>
-                    <div class="text-right hidden md:block">
-                        <span class="text-8xl font-black opacity-5">02</span>
-                    </div>
-                </div>
-
-                <div class="relative group">
-                    <!-- Nav Buttons -->
-                    <button onclick="scrollGallery(-1)"
-                        class="absolute -left-4 md:left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 md:w-14 md:h-14 bg-white/90 backdrop-blur-md flex items-center justify-center shadow-xl opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all transform hover:bg-[#C16053] hover:text-white border border-gray-100">
-                        <i data-lucide="chevron-left" class="w-5 h-5 md:w-6 md:h-6"></i>
-                    </button>
-                    <button onclick="scrollGallery(1)"
-                        class="absolute -right-4 md:right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 md:w-14 md:h-14 bg-[#1A1A1A] flex items-center justify-center shadow-xl opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all transform hover:scale-105 border border-white/10">
-                        <i data-lucide="chevron-right" class="w-5 h-5 md:w-6 md:h-6 text-white"></i>
-                    </button>
-
-                    <div id="gallery-container" class="gallery-grid no-scrollbar">
-                        <!-- Loaded dynamically from DB via /api/artworks -->
-                        <div id="gallery-loading" class="col-span-full flex flex-col items-center justify-center py-24 gap-4 opacity-40">
-                            <div class="w-10 h-10 border-4 border-[#C16053] border-t-transparent rounded-full animate-spin"></div>
-                            <p class="text-[10px] font-black uppercase tracking-widest">Loading Portfolio...</p>
-                        </div>
-                    </div>
-                </div>
-        </section>
-
-        <!-- Booking Section -->
-        <section id="booking" class="py-12 md:py-32 px-4 md:px-12 bg-white flex justify-center">
-            <div
-                class="max-w-full md:max-w-5xl w-full grid md:grid-cols-2 bg-[#1A1A1A] text-white shadow-2xl overflow-hidden">
-                <div class="p-8 md:p-12 space-y-6 md:space-y-8 flex flex-col justify-center bg-[#C16053]">
-                    <h2 class="text-4xl md:text-6xl font-black uppercase leading-[0.9] md:leading-none">
-                        Book<br>Your<br>Portrait</h2>
-                    <p class="opacity-90 italic text-xs md:text-base">Secure your slot today. Turnaround time: 7-14
-                        business days.</p>
-                    <div class="space-y-4 pt-4 md:pt-8">
-                        <div class="flex items-center space-x-4">
-                            <div
-                                class="w-8 h-8 md:w-10 md:h-10 border border-white/30 rounded-full flex items-center justify-center">
-                                <i data-lucide="check" class="w-3 md:w-4 h-3 md:h-4"></i>
-                            </div>
-                            <p class="font-bold text-sm md:text-base">Original Artwork</p>
-                        </div>
-                        <div class="flex items-center space-x-4">
-                            <div
-                                class="w-8 h-8 md:w-10 md:h-10 border border-white/30 rounded-full flex items-center justify-center">
-                                <i data-lucide="check" class="w-3 md:w-4 h-3 md:h-4"></i>
-                            </div>
-                            <p class="font-bold text-sm md:text-base">High-Res Digital Copy</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-8 md:p-12 text-[#1A1A1A] bg-white">
-                    <form id="booking-form" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div class="space-y-1">
-                                <label class="text-[10px] uppercase tracking-widest font-black opacity-50">Full
-                                    Name</label>
-                                <input type="text" name="name" required
-                                    class="w-full border-b-2 border-gray-100 p-2 focus:border-[#C16053] outline-none transition-all">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[10px] uppercase tracking-widest font-black opacity-50">Email</label>
-                                <input type="email" name="email" required
-                                    class="w-full border-b-2 border-gray-100 p-2 focus:border-[#C16053] outline-none transition-all">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div class="space-y-1">
-                                <label class="text-[10px] uppercase tracking-widest font-black opacity-50">Phone
-                                    Number</label>
-                                <input type="tel" name="phone" required
-                                    class="w-full border-b-2 border-gray-100 p-2 focus:border-[#C16053] outline-none transition-all"
-                                    placeholder="09XX XXX XXXX">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[10px] uppercase tracking-widest font-black opacity-50">Social Media
-                                    (FB/IG)</label>
-                                <input type="text" name="social" required
-                                    class="w-full border-b-2 border-gray-100 p-2 focus:border-[#C16053] outline-none transition-all"
-                                    placeholder="@username">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div class="space-y-1">
-                                <label
-                                    class="text-[10px] uppercase tracking-widest font-black opacity-50">Deadline</label>
-                                <input type="date" name="deadline" required
-                                    class="w-full border-b-2 border-gray-100 p-2 focus:border-[#C16053] outline-none transition-all">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[10px] uppercase tracking-widest font-black opacity-50">Medium
-                                    Choice</label>
-                                <select name="medium" id="booking-medium"
-                                    class="w-full border-b-2 border-gray-100 p-2 focus:border-[#C16053] outline-none transition-all cursor-pointer">
-                                    <option value="pencil">Pencil Realism</option>
-                                    <option value="digital">Digital Fauvism</option>
-                                    <option value="charcoal">Charcoal Express</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div class="space-y-1">
-                                <label class="text-[10px] uppercase tracking-widest font-black opacity-50">Portrait
-                                    Size</label>
-                                <select name="size" id="booking-size"
-                                    class="w-full border-b-2 border-gray-100 p-2 focus:border-[#C16053] outline-none transition-all cursor-pointer">
-                                    <option value="A4">A4 (Standard)</option>
-                                    <option value="8.5x11">8.5 x 11 (Popular)</option>
-                                    <option value="12x18">12 x 18 (Large Masterpiece)</option>
-                                </select>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[10px] uppercase tracking-widest font-black opacity-50">Payment
-                                    Method</label>
-                                <select name="payment" onchange="toggleGCashReceipt(this)"
-                                    class="w-full border-b-2 border-gray-100 p-2 focus:border-[#C16053] outline-none transition-all cursor-pointer font-bold">
-                                    <option value="gcash">GCash (Preferred)</option>
-                                    <option value="cash-in">Cash-In</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- GCash Receipt Upload (Conditional) -->
-                        <div id="gcash-receipt-wrapper" class="hidden space-y-1 pt-2 animate-fade-in-up">
-                            <label class="text-[10px] uppercase tracking-widest font-black text-[#C16053]">GCash Receipt
-                                Screenshot</label>
-                            <div class="relative">
-                                <input type="file" name="receipt" id="gcash-receipt-file"
-                                    onchange="updateFilename('gcash-receipt-file', 'receipt-filename')"
-                                    class="w-full opacity-0 absolute inset-0 cursor-pointer z-10" accept="image/*">
-                                <div
-                                    class="w-full border-2 border-dashed border-[#C16053]/30 p-6 text-center rounded-3xl text-[10px] font-black uppercase tracking-widest opacity-60 bg-[#C16053]/5 hover:bg-[#C16053]/10 transition-colors">
-                                    <i data-lucide="upload-cloud" class="w-5 h-5 mx-auto mb-2 text-[#C16053]"></i>
-                                    <span id="receipt-filename">Upload GCash Payment Proof</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div class="space-y-1">
-                                <label class="text-[10px] uppercase tracking-widest font-black opacity-50">Meet-up
-                                    Address</label>
-                                <input type="text" id="booking-address-input" name="address" required
-                                    placeholder="Drag pin or type address"
-                                    class="w-full border-b-2 border-gray-100 p-2 focus:border-[#C16053] outline-none transition-all placeholder:text-gray-200">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[10px] uppercase tracking-widest font-black opacity-50">Reference
-                                    Photo</label>
-                                <div class="relative">
-                                    <input type="file" name="file" required
-                                        class="w-full opacity-0 absolute inset-0 cursor-pointer z-10">
-                                    <div
-                                        class="w-full border-2 border-dashed border-gray-100 p-2 text-center rounded-lg text-[9px] font-bold uppercase tracking-widest opacity-50">
-                                        Upload Image
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Interactive Leaflet Map Picker -->
-                        <div
-                            class="relative w-full h-56 rounded-3xl overflow-hidden border border-gray-100 group shadow-2xl shadow-gray-100">
-                            <div id="booking-map-picker" class="w-full h-full z-0"></div>
-
-                            <!-- UI Overlay for Search & Map Tools -->
-                            <div class="absolute top-4 left-4 right-4 z-[1000] flex flex-col space-y-2">
-                                <div id="map-search-container"
-                                    class="bg-white/90 backdrop-blur-md p-1.5 rounded-2xl border border-gray-100 shadow-xl flex items-center space-x-2 w-full lg:max-w-xs">
-                                    <input type="text" id="map-search-input" placeholder="Search a place..."
-                                        class="flex-1 bg-transparent px-4 text-[10px] font-bold uppercase tracking-widest outline-none border-none">
-                                    <button type="button" onclick="searchMapLocation()"
-                                        class="bg-[#1A1A1A] text-white p-2.5 rounded-xl hover:bg-[#C16053] transition-all">
-                                        <i data-lucide="search" class="w-3.5 h-3.5"></i>
-                                    </button>
-                                </div>
-
-                                <div class="flex items-center space-x-2">
-                                    <button type="button" onclick="openExternalGoogleMap()"
-                                        class="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-100 shadow-sm flex items-center space-x-2 hover:bg-[#C16053] hover:text-white transition-all">
-                                        <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                        <span class="text-[10px] font-black uppercase tracking-widest">Open Google
-                                            Map</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button type="submit"
-                            class="w-full bg-[#1A1A1A] text-white py-6 font-black uppercase tracking-widest text-sm hover:bg-[#C16053] transition-all">
-                            Submit Booking Request
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="py-20 px-12 border-t border-gray-100 bg-[#FDFBF7]">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
-            <div class="font-display text-2xl md:text-4xl font-black mb-4 md:mb-0">
-                Pencilation<span class="text-[#C16053]">.</span>
-            </div>
-            <div class="flex flex-col items-center md:items-end space-y-4 text-xs font-bold text-gray-400">
-                <div class="flex flex-col items-center md:items-end mb-4">
-                    <p class="text-[10px] uppercase tracking-widest mb-1">Direct Contact</p>
-                    <p class="text-[#1A1A1A] text-lg font-black tracking-tighter">09635858618</p>
-                    <p class="text-[#C16053] font-black underline">adelyasingumama@gmail.com</p>
-                </div>
-                <div class="flex space-x-8 uppercase tracking-widest">
-                    <a href="https://www.instagram.com/assh1ng20/" target="_blank" rel="noopener noreferrer"
-                        class="hover:text-[#1A1A1A]">Instagram</a>
-                    <a href="https://www.facebook.com/profile.php?id=61558446973287" target="_blank"
-                        rel="noopener noreferrer" class="hover:text-[#1A1A1A]">Facebook</a>
-                    <a href="login.html" class="text-[#C16053] font-black hover:opacity-60 transition-opacity">Artist Access</a>
-                </div>
-                <p>© 2024 PORTRAIT BOOKING SYSTEM. ALL RIGHTS RESERVED.</p>
-            </div>
-        </div>
-    </footer>
-
-
-
-    <!-- Navigation Dock (Fixed at Bottom) -->
-    <div class="hidden md:flex">
-        <div class="glass-dock">
-            <a href="#hero" class="dock-item">
-                <span class="dock-label">Overview</span>
-                <i data-lucide="layout-dashboard"></i>
-            </a>
-            <a href="#services" class="dock-item">
-                <span class="dock-label">Services</span>
-                <i data-lucide="layers"></i>
-            </a>
-            <a href="#about" class="dock-item">
-                <span class="dock-label">About Me</span>
-                <i data-lucide="user"></i>
-            </a>
-            <a href="#rates" class="dock-item">
-                <span class="dock-label">Pricing</span>
-                <i data-lucide="tag"></i>
-            </a>
-            <a href="#gallery" class="dock-item">
-                <span class="dock-label">Portfolio</span>
-                <i data-lucide="image"></i>
-            </a>
-            <a href="#booking" class="dock-item bg-red-50 text-[#C16053] border-red-100">
-                <span class="dock-label">Book Now</span>
-                <i data-lucide="edit-3"></i>
-            </a>
         </div>
     </div>
 
-    <script src="js/config.js?v=3.0"></script>
-    <script type="module" src="js/supabase.js"></script>
-    <script src="js/pencilation-db.js"></script>
-    <script src="js/main.js?v=4.0"></script>
-    <script src="js/gallery.js?v=3.0"></script>
-    <script src="js/booking.js?v=3.0"></script>
+    <!-- Absolute Footer Links -->
+    <div class="absolute bottom-6 md:bottom-12 left-0 w-full px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-6 opacity-0 animate-slide-up delay-600 z-20">
+        <div class="text-[9px] uppercase font-black tracking-[0.3em] text-gray-500 flex space-x-8">
+            <a href="https://www.instagram.com/assh1ng20/" target="_blank" class="hover:text-white transition-colors duration-300 flex items-center space-x-2.5">
+                <i data-lucide="instagram" class="w-3.5 h-3.5"></i>
+                <span>Instagram</span>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61558446973287" target="_blank" class="hover:text-white transition-colors duration-300 flex items-center space-x-2.5">
+                <i data-lucide="facebook" class="w-3.5 h-3.5"></i>
+                <span>Facebook</span>
+            </a>
+        </div>
+        
+        <a href="login.html" class="text-[9px] uppercase font-black tracking-[0.3em] text-gray-500 hover:text-primary transition-colors duration-300 flex items-center space-x-2.5 bg-white/5 py-2 px-5 rounded-full border border-white/5 hover:bg-white/10 hover:border-primary/30">
+            <i data-lucide="lock" class="w-3 h-3"></i>
+            <span>Artist Portal</span>
+        </a>
+    </div>
+
+    <!-- Initialize Icons -->
     <script>
         lucide.createIcons();
     </script>
 </body>
-
 </html>
