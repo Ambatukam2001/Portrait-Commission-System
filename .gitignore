@@ -1,17 +1,24 @@
-# IDE & OS Files
-.vscode/
-.idea/
+*.log
 .DS_Store
-Thumbs.db
-
-# Dependent Packages
-node_modules/
-vendor/
-composer.phar
-
-# Environment Variables
 .env
-.env.local
-
-# Optional: Ignore actual local DB backups that could have real client details in the future
-# database_local_backups.sql
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db

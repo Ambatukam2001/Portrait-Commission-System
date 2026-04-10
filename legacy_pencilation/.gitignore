@@ -1,0 +1,17 @@
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Dependent Packages
+node_modules/
+vendor/
+composer.phar
+
+# Environment Variables
+.env
+.env.local
+
+# Optional: Ignore actual local DB backups that could have real client details in the future
+# database_local_backups.sql

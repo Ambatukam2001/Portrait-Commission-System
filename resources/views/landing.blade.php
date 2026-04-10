@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pencilation | Welcome to Artistic Journey</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden !important;
+            background-color: #FDFBF7;
+            font-family: 'Outfit', sans-serif;
+            height: 100dvh;
+            width: 100vw;
+            position: fixed; /* Absolute lock */
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-user-select: none; /* Cleaner app feel */
+            user-select: none;
+        }
+
+        .landing-container {
+            display: flex;
+            width: 400vw;
+            height: 100dvh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .section {
+            width: 100vw;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1.5rem 10dvh 1.5rem; /* Squeezed bottom padding */
+            text-align: center;
+            position: relative;
+            overflow: hidden !important; /* Total lockdown */
+        }
+
+        .nav-controls {
+            position: fixed;
+            bottom: 6dvh; /* Lowered significantly to clear room for the text */
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2rem;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: transparent;
+            color: inherit;
+            border: none;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        .nav-btn i {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .nav-btn:hover i {
+            color: #C16053;
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        .nav-btn.disabled {
+            opacity: 0.15;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .progress-indicator {
+            position: fixed;
+            top: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 100;
+        }
+
+        .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #E8E4DF;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: #C16053;
+            width: 15px;
+            border-radius: 10px;
+        }
+
+        /* Pencil Loading Animation */
+        #loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: #FDFBF7;
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .pencil-container {
+            position: relative;
+            width: 200px;
+            height: 40px;
+        }
+
+        .pencil {
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            left: 0;
+            animation: movePencil 2s linear infinite;
+        }
+
+        .draw-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: #1A1A1A;
+            animation: drawLine 2s linear infinite;
+        }
+
+        @keyframes movePencil {
+            0% { left: 0; transform: rotate(0deg); }
+            50% { left: 160px; transform: rotate(15deg); }
+            100% { left: 0; transform: rotate(0deg); }
+        }
+
+        @keyframes drawLine {
+            0% { width: 0; left: 0; }
+            50% { width: 160px; left: 0; }
+            100% { width: 0; left: 160px; }
+        }
+
+        .hero-text {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.5rem, 10vw, 8rem); 
+            line-height: 0.85;
+            font-weight: 900;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        @media (max-width: 480px) {
+            .hero-text {
+                font-size: clamp(1.25rem, 11vw, 2.2rem);
+            }
+        }
+
+        .sub-text {
+            max-width: 450px;
+            font-size: clamp(0.75rem, 3.2vw, 1rem);
+            opacity: 0.7;
+            padding: 0 1.25rem;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body class="bg-[#FDFBF7]">
+
+    <!-- Progress Dots -->
+    <div class="progress-indicator left-1/2 -translate-x-1/2">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <!-- Main Container for Horizontal Layout -->
+    <div class="landing-container" id="landing-container">
+        <!-- Section 1: Welcome -->
+        <section class="section">
+            <p class="text-[#C16053] font-bold tracking-[0.4em] uppercase mb-6">Introduction</p>
+            <h1 class="hero-text">WELCOME TO<br>PENCILATION<span class="text-[#C16053]">.</span></h1>
+            <p class="sub-text">Where every stroke captures a soul and every portrait tells a unique story. Discover the fusion of traditional skill and modern vision.</p>
+        </section>
+
+        <!-- Section 2: The Art -->
+        <section class="section">
+            <p class="text-[#C16053] font-bold tracking-[0.4em] uppercase mb-4 md:mb-6 text-[10px] md:text-sm">The Essence</p>
+            <h1 class="hero-text">SOULFUL<br>STROKES</h1>
+            <p class="sub-text">From hyper-realistic pencil sketches to vibrant digital fauvism, we bring your vision to life with artistic integrity and precision.</p>
+            <div class="mt-8 md:mt-12 flex gap-3 md:gap-4 scale-75 md:scale-100">
+                <div class="w-28 h-28 md:w-32 md:h-32 bg-gray-100 rounded-2xl overflow-hidden shadow-lg transform -rotate-6">
+                    <img src="{{ asset('images/portrait_sample.png') }}" class="w-full h-full object-cover opacity-60">
+                </div>
+                <div class="w-28 h-28 md:w-32 md:h-32 bg-gray-100 rounded-2xl overflow-hidden shadow-lg transform rotate-6">
+                    <img src="{{ asset('images/digital_art.png') }}" class="w-full h-full object-cover opacity-60">
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: The Process -->
+        <section class="section">
+            <p class="text-[#C16053] font-bold tracking-[0.4em] uppercase mb-4 md:mb-6 text-[10px] md:text-sm">The Journey</p>
+            <h1 class="hero-text">SEAMLESS<br>BOOKING</h1>
+            <p class="sub-text">Choose your medium, pick your size, and set a meet-up point. We've simplified the commission process so you can focus on the art.</p>
+        </section>
+
+        <!-- Section 4: Get Started -->
+        <section class="section">
+            <p class="text-[#C16053] font-bold tracking-[0.4em] uppercase mb-4 md:mb-6 text-[10px] md:text-sm">Final Step</p>
+            <h1 class="hero-text">READY TO<br>BEGIN?</h1>
+            <button onclick="proceedToApp()" 
+                class="mt-8 md:mt-12 bg-[#1A1A1A] text-white px-8 md:px-12 py-5 md:py-6 font-black uppercase tracking-widest text-[10px] md:text-xs hover:bg-[#C16053] transition-all hover:scale-105 shadow-2xl flex items-center gap-3 md:gap-4">
+                Enter The Studio <i data-lucide="arrow-right"></i>
+            </button>
+        </section>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="nav-controls flex-row items-center !gap-16 md:!gap-32">
+        <button id="prevBtn" class="nav-btn disabled text-[#E8E4DF] hover:text-[#C16053]" onclick="navigate(-1)">
+            <i data-lucide="chevron-left" class="w-10 h-10 md:w-14 md:h-14"></i>
+        </button>
+        <button id="nextBtn" class="nav-btn text-[#1A1A1A] hover:text-[#C16053]" onclick="navigate(1)">
+            <i data-lucide="chevron-right" class="w-10 h-10 md:w-14 md:h-14"></i>
+        </button>
+    </div>
+
+    <!-- Pencil Loader Overlay -->
+    <div id="loader-overlay">
+        <div class="pencil-container">
+            <div class="draw-line"></div>
+            <div class="pencil">
+                <i data-lucide="pencil" class="text-[#C16053] w-10 h-10"></i>
+            </div>
+        </div>
+        <p class="mt-8 font-black uppercase tracking-[0.5em] text-[10px] text-[#1A1A1A] animate-pulse">Sharpening the pencils...</p>
+    </div>
+
+    <script>
+        let currentSection = 0;
+        const totalSections = 4;
+        const container = document.getElementById('landing-container');
+        const dots = document.querySelectorAll('.dot');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function navigate(direction) {
+            currentSection = Math.max(0, Math.min(totalSections - 1, currentSection + direction));
+            updateUI();
+        }
+
+        function updateUI() {
+            container.style.transform = `translateX(-${currentSection * 100}vw)`;
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSection);
+            });
+            prevBtn.classList.toggle('disabled', currentSection === 0);
+            nextBtn.classList.toggle('disabled', currentSection === totalSections - 1);
+        }
+
+        function proceedToApp() {
+            const loader = document.getElementById('loader-overlay');
+            loader.style.display = 'flex';
+            setTimeout(() => {
+                window.location.href = '/portfolio'; 
+            }, 2500);
+        }
+
+        lucide.createIcons();
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') navigate(1);
+            if (e.key === 'ArrowLeft') navigate(-1);
+        });
+    </script>
+</body>
+
+</html>
