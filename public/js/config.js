@@ -10,8 +10,13 @@ const CONFIG = (() => {
     /** Synthetic email domain for Supabase Auth (username → username@domain) */
     const LOGIN_EMAIL_DOMAIN = readMeta('login-email-domain') || 'pencilation.admin';
 
+    const supabaseUrl = readMeta('supabase-url');
+    const supabaseAnonKey = readMeta('supabase-anon-key');
+
     return {
         LOGIN_EMAIL_DOMAIN,
+        SUPABASE_URL: supabaseUrl,
+        SUPABASE_ANON_KEY: supabaseAnonKey,
         /** Legacy alias — data layer uses Supabase; no PHP API */
         API_URL: '',
         UPLOAD_URL: '',
