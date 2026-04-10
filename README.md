@@ -7,7 +7,8 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## Portrait Drawing (Pencilation) — Supabase Backend (No npm)
+Pencilation Commission Booking System
+Client Booking & Commission Management Platform/ Supabase Backend (No npm)
 
 This system runs as **static HTML + Tailwind CSS + JavaScript** in `public/` and uses **Supabase** as the backend (no PHP/MySQL API).
 
