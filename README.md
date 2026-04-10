@@ -9,11 +9,11 @@
 
 <h1> Pencilation Commission Booking System </h1>
 Client Booking & Commission Management Platform/ Supabase Backend (No npm)
-___________________________________________________________________________________________________________________________________
-<p This project is a Pencilation Commission Booking System designed for managing client bookings for custom pencil artwork commissions. It allows users to submit booking requests, view available services, and track their requests through a structured and user-friendly interface.>
 
-<p The system is built using HTML, Tailwind CSS, and JavaScript for the frontend, ensuring a modern, responsive, and visually appealing design. It features a clean UI with smooth interactions, optimized layout, and mobile-friendly responsiveness to enhance user experience.>
+This project is a Pencilation Commission Booking System designed for managing client bookings for custom pencil artwork commissions. It allows users to submit booking requests, view available services, and track their requests through a structured and user-friendly interface.
 
-<p The backend is powered by Laravel, providing a secure and scalable API layer, while Supabase is integrated as the database solution for efficient data storage, management, and real-time synchronization. >
+The system is built using HTML, Tailwind CSS, and JavaScript for the frontend, ensuring a modern, responsive, and visually appealing design. It features a clean UI with smooth interactions, optimized layout, and mobile-friendly responsiveness to enhance user experience.
 
-<p This platform streamlines the process of handling art commission requests, improving workflow between clients and the artist through a centralized, organized, and aesthetically designed booking system. >
+The backend is powered by Laravel, providing a secure and scalable API layer, while Supabase is integrated as the database solution for efficient data storage, management, and real-time synchronization. 
+
+This platform streamlines the process of handling art commission requests, improving workflow between clients and the artist through a centralized, organized, and aesthetically designed booking system. 
