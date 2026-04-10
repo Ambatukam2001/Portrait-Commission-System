@@ -391,8 +391,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // --- Application Bootstrap & Navigation (Consolidated) ---
-    lucide.createIcons();
+    if(window.location.pathname.includes('dashboard.html') || window.location.pathname.includes('dashboard.php')) {
+        switchTab('booking-tab');
+    }
+});
+
+// --- Application Bootstrap & Navigation (Unconditional UI Logic) ---
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    
     const sideToggle = document.getElementById('sidebar-toggle');
     const sidebar = document.getElementById('sidebar');
 
@@ -418,11 +425,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
     });
-
-    if(window.location.pathname.includes('dashboard.html') || window.location.pathname.includes('dashboard.php')) {
-        switchTab('booking-tab');
-    }
 });
+
 
 // ── Admin Gallery Renderer ───────────────────────────────────
 window.renderGallery = async () => {
