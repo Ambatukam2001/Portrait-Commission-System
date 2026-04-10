@@ -23,9 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(headerTitle) headerTitle.textContent = "OVERVIEW";
         const adminControls = document.getElementById('admin-map-controls');
         if(adminControls) adminControls.classList.remove('hidden');
-
-        // ── Boot from Supabase ──
-        syncDashboardData();
+        // syncDashboardData() is called below after it's defined on window
     } else {
         if(headerTitle) headerTitle.textContent = storedName || "Guest User";
         if(dashboardRole) dashboardRole.textContent = "Client Profile";
